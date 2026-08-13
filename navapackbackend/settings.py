@@ -68,7 +68,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Frontend development server allowed to call this API.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://www.navapacksolutions.com"
+    "https://www.navapacksolutions.com",
+    "https://navapacksolutions.com",
+    "http://localhost:5173",  # Vite default
+    "http://localhost:3000",  # CRA / Next.js default
 ]
+
+# If you allow credentials (cookies, HTTP Auth, tokens via authorization headers)
+CORS_ALLOW_CREDENTIALS = True
