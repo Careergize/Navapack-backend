@@ -71,7 +71,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.navapacksolutions.com",
     "https://navapacksolutions.com",
     "http://localhost:5173",  # Vite default
-    "http://localhost:3000",  # CRA / Next.js default
+    "http://localhost:3000",
+    "https://navapack-backend.azurewebsites.net",  # CRA / Next.js default
 ]
 
 # If you allow credentials (cookies, HTTP Auth, tokens via authorization headers)
