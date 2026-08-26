@@ -2,12 +2,9 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 from pathlib import Path
-<<<<<<< HEAD
-from dotenv import load_dotenv
 
-=======
-load_dotenv()
->>>>>>> ffe0d8e3a8f9aee82a9359c99b722dfa0ec2ac29
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-change-this-secret-key-before-production"
@@ -61,8 +58,6 @@ ASGI_APPLICATION = "navapackbackend.asgi.application"
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
 
@@ -73,7 +68,7 @@ DATABASES = {
         ssl_require=True,
     )
 }
-_ZONE = "UTC"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
