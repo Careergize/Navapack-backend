@@ -1,13 +1,22 @@
 import os
+from pathlib import Path
+
 import dj_database_url
 from dotenv import load_dotenv
-from pathlib import Path
+
 load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-change-this-secret-key-before-production"
+
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = [
+    "navapack-backend.azurewebsites.net",
+    "localhost",
+    "127.0.0.1",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -16,16 +25,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "corsheaders",
     "rest_framework",
+    "rest_framework.authtoken",
+
     "products",
-    'rest_framework.authtoken',
-    'Auth'
+    "Auth",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # CORS middleware should be before CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -54,7 +68,10 @@ TEMPLATES = [
 WSGI_APPLICATION = "navapackbackend.wsgi.application"
 ASGI_APPLICATION = "navapackbackend.asgi.application"
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# =========================
+# DATABASE
+# =========================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -69,22 +86,45 @@ DATABASES = {
     )
 }
 
-AUTH_PASSWORD_VALIDATORS = []
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
-STATIC_URL = "static/"
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Frontend development server allowed to call this API.
+# =========================
+# CORS
+# =========================
+
 CORS_ALLOWED_ORIGINS = [
     "https://www.navapacksolutions.com",
     "https://navapacksolutions.com",
-    "http://localhost:5173",  # Vite default
+
+    # Local development
+    "http://localhost:5173",
     "http://localhost:3000",
-    "https://navapack-backend.azurewebsites.net",  # CRA / Next.js default
 ]
 
-# If you allow credentials (cookies, HTTP Auth, tokens via authorization headers)
 CORS_ALLOW_CREDENTIALS = True
+
+
+# =========================
+# CSRF
+# =========================
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://www.navapacksolutions.com",
+    "https://navapacksolutions.com",
+]
+
+
+# =========================
+# OTHER SETTINGS
+# =========================
+
+AUTH_PASSWORD_VALIDATORS = []
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "static/"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
