@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Product(models.Model):
+class Product(models.Model):# defing a table
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=255)
     categorySlug = models.SlugField(max_length=255)
