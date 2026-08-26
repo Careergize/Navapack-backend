@@ -6,3 +6,4 @@ gunicorn>=21.2,<22.0
 # PostgreSQL
 psycopg[binary]>=3.2,<4.0
 dj-database-url>=2.2,<3.0
+python-dotenv
