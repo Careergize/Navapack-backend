@@ -211,8 +211,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "https://www.navapacksolutions.com",
     "https://navapacksolutions.com",
+    "https://api.navapacksolutions.com",
 ]
-
 
 # =========================================================
 # DJANGO REST FRAMEWORK
