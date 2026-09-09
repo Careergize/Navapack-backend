@@ -19,9 +19,15 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
+# IMPORTANT: In production, set the ALLOWED_HOSTS env var explicitly, e.g.:
+#   ALLOWED_HOSTS=api.navapacksolutions.com,navapacksolutions.com,www.navapacksolutions.com
+# If this is missing/incomplete on the server, Django returns a 400
+# "DisallowedHost" response BEFORE CorsMiddleware can attach CORS headers,
+# which is what produces "No 'Access-Control-Allow-Origin' header" errors
+# in the browser even though CORS_ALLOWED_ORIGINS below looks correct.
 ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
+    "localhost,127.0.0.1,api.navapacksolutions.com,navapacksolutions.com,www.navapacksolutions.com"
 ).split(",")
 
 
@@ -201,7 +207,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# CORS_ALLOW_CREDENTIALS = True
+# Enable this if your frontend sends cookies / session credentials with
+# requests (e.g. fetch(..., { credentials: "include" }) or axios's
+# `withCredentials: true`). If you're using pure token/bearer-header auth
+# with no cookies, you can leave this off.
+CORS_ALLOW_CREDENTIALS = True
 
 
 # =========================================================
