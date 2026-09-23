@@ -12,7 +12,7 @@ class CustomerPipelineSerializer(serializers.ModelSerializer):
     # Returns nested object for GET reads
     salesperson_detail = SalespersonSerializer(source='salesperson', read_only=True)
     # Accepts foreign key ID for POST/PUT writes
-    salesperson = serializers.PrimaryKeyRelatedResource(queryset=Salesperson.objects.all())
+    salesperson = serializers.PrimaryKeyRelatedField(queryset=Salesperson.objects.all())  
 
     class Meta:
         model = CustomerPipeline
@@ -21,7 +21,7 @@ class CustomerPipelineSerializer(serializers.ModelSerializer):
 
 class DailyActivitySerializer(serializers.ModelSerializer):
     salesperson_detail = SalespersonSerializer(source='salesperson', read_only=True)
-    salesperson = serializers.PrimaryKeyRelatedResource(queryset=Salesperson.objects.all())
+    salesperson = serializers.PrimaryKeyRelatedField(queryset=Salesperson.objects.all())
 
     class Meta:
         model = DailyActivity
