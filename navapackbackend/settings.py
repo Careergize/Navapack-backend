@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+
     "corsheaders",
     "rest_framework",
     "rest_framework.authtoken",
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 
@@ -122,6 +124,7 @@ DATABASES = {
         "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
+
 
 
 # =========================================================
@@ -270,3 +273,6 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
     X_FRAME_OPTIONS = "DENY"
+
+    STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  #
