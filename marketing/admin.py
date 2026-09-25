@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import Salesperson, CustomerPipeline, DailyActivity, DropdownLists
+from .models import (
+    Salesperson,
+    CustomerPipeline,
+    DailyActivity,
+    DropdownLists,
+    ProductService,
+    SalesStage,
+    ActivityType,
+    Unit,
+)
 
 
 @admin.register(Salesperson)
@@ -170,3 +179,28 @@ class DropdownListsAdmin(admin.ModelAdmin):
         if self.model.objects.exists():
             return False
         return super().has_add_permission(request)
+
+
+@admin.register(ProductService)
+class ProductServiceAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
+@admin.register(SalesStage)
+class SalesStageAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
+@admin.register(ActivityType)
+class ActivityTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+
+@admin.register(Unit)
+class UnitAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+

@@ -156,3 +156,31 @@ def save(self, *args, **kwargs):
     if creating_without_id:
         self.prospect_id = f'PR-{self.pk:04d}'
         super().save(update_fields=['prospect_id'])
+
+
+class ProductService(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class SalesStage(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class ActivityType(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Unit(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
