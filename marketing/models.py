@@ -135,3 +135,24 @@ class DropdownLists(models.Model):
     customer_types = models.JSONField(default=list)
     sales_stages = models.JSONField(default=list)
     departments = models.JSONField(default=list)
+
+
+
+stage_last_updated = models.DateField(default=timezone.localdate)
+def save(self, *args, **kwargs):
+    # 1) only bump the date when the sales stage really changes
+    if self.pk:
+        old_stage = (CustomerPipeline.objects.filter(pk=self.pk)
+                     .values_list('sales_stage', flat=True).first())
+        if old_stage is not None and old_stage != self.sales_stage:
+            self.stage_last_updated = timezone.localdate()
+
+    # 2) auto-generate prospect_id (the frontend never sends one, and the field is required + unique)
+    creating_without_id = not self.prospect_id
+    if creating_without_id:
+        import uuid
+        self.prospect_id = uuid.uuid4().hex[:12]   # temporary unique value
+    super().save(*args, **kwargs)
+    if creating_without_id:
+        self.prospect_id = f'PR-{self.pk:04d}'
+        super().save(update_fields=['prospect_id'])
