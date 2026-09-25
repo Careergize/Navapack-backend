@@ -8,6 +8,7 @@ from .serializers import LoginSerializer
 from .serializers import SignupSerializer
 from .serializers import UserListSerializer
 
+
 class LoginAPIView(APIView):
     """
     API View to authenticate users via Email and Password.
@@ -22,6 +23,12 @@ class LoginAPIView(APIView):
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
 
+        # Use getattr instead of user.profile directly — if this user has no
+        # related Profile row (e.g. created via admin/createsuperuser/seed
+        # script, or before a profile-creation signal existed), user.profile
+        # raises RelatedObjectDoesNotExist and Django turns that into a 500.
+        profile = getattr(user, 'profile', None)
+
         return Response({
             'token': token.key,
             'user': {
@@ -29,10 +36,9 @@ class LoginAPIView(APIView):
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'department': user.profile.department,
+                'department': profile.department if profile else None,
             }
         }, status=status.HTTP_200_OK)
-
 
 
 class SignupAPIView(APIView):
@@ -43,15 +49,17 @@ class SignupAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
+        profile = getattr(user, 'profile', None)
+
         return Response({
             'message': 'Account created successfully. Please wait for administrator approval before logging in.',
             'user': {
                 'id': user.id,
                 'email': user.email,
                 'name': f"{user.first_name} {user.last_name}".strip(),
-                'employee_id': user.profile.employee_id,
-                'department': user.profile.department,
-                'is_approved': user.profile.is_approved,
+                'employee_id': profile.employee_id if profile else None,
+                'department': profile.department if profile else None,
+                'is_approved': profile.is_approved if profile else False,
             }
         }, status=status.HTTP_201_CREATED)
 
