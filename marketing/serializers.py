@@ -5,6 +5,10 @@ from .models import (
     CustomerPipeline,
     DailyActivity,
     DropdownLists,
+    ProductService,
+    SalesStage,
+    ActivityType,
+    Unit,
 )
 
 
@@ -51,5 +55,33 @@ class DropdownListsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DropdownLists
+        fields = '__all__'
+
+
+class ProductServiceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductService
+        fields = '__all__'
+
+
+class SalesStageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SalesStage
+        fields = '__all__'
+
+
+class ActivityTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActivityType
+        fields = '__all__'
+
+
+class UnitSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Unit
         fields = '__all__'
 

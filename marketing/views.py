@@ -5,12 +5,25 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Salesperson, CustomerPipeline, DailyActivity, DropdownLists
+from .models import (
+    Salesperson,
+    CustomerPipeline,
+    DailyActivity,
+    DropdownLists,
+    ProductService,
+    SalesStage,
+    ActivityType,
+    Unit,
+)
 from .serializers import (
     SalespersonSerializer,
     CustomerPipelineSerializer,
     DailyActivitySerializer,
-    DropdownListsSerializer
+    DropdownListsSerializer,
+    ProductServiceSerializer,
+    SalesStageSerializer,
+    ActivityTypeSerializer,
+    UnitSerializer,
 )
 
 
@@ -382,3 +395,187 @@ class DropdownListsAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ==========================================
+# 7. MASTER LOOKUP API VIEWS
+# ==========================================
+
+class ProductServiceListCreateAPIView(APIView):
+    def get(self, request):
+        queryset = ProductService.objects.all().order_by('name')
+        serializer = ProductServiceSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ProductServiceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProductServiceDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return ProductService.objects.get(pk=pk)
+        except ProductService.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ProductService not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ProductServiceSerializer(obj).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ProductService not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProductServiceSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ProductService not found'}, status=status.HTTP_404_NOT_FOUND)
+        obj.delete()
+        return Response({'message': 'ProductService deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class SalesStageListCreateAPIView(APIView):
+    def get(self, request):
+        queryset = SalesStage.objects.all().order_by('name')
+        serializer = SalesStageSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = SalesStageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SalesStageDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return SalesStage.objects.get(pk=pk)
+        except SalesStage.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'SalesStage not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(SalesStageSerializer(obj).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'SalesStage not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = SalesStageSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'SalesStage not found'}, status=status.HTTP_404_NOT_FOUND)
+        obj.delete()
+        return Response({'message': 'SalesStage deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class ActivityTypeListCreateAPIView(APIView):
+    def get(self, request):
+        queryset = ActivityType.objects.all().order_by('name')
+        serializer = ActivityTypeSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ActivityTypeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ActivityTypeDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return ActivityType.objects.get(pk=pk)
+        except ActivityType.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ActivityType not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ActivityTypeSerializer(obj).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ActivityType not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ActivityTypeSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'ActivityType not found'}, status=status.HTTP_404_NOT_FOUND)
+        obj.delete()
+        return Response({'message': 'ActivityType deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class UnitListCreateAPIView(APIView):
+    def get(self, request):
+        queryset = Unit.objects.all().order_by('name')
+        serializer = UnitSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = UnitSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UnitDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return Unit.objects.get(pk=pk)
+        except Unit.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'Unit not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(UnitSerializer(obj).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'Unit not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UnitSerializer(obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error': 'Unit not found'}, status=status.HTTP_404_NOT_FOUND)
+        obj.delete()
+        return Response({'message': 'Unit deleted'}, status=status.HTTP_204_NO_CONTENT)
