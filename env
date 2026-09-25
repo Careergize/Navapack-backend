@@ -1,0 +1,12 @@
+
+DEBUG=False
+
+SECRET_KEY=your-new-django-secret-key
+
+ALLOWED_HOSTS=YOUR_EC2_PUBLIC_IP,localhost,127.0.0.1
+
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=navapack
+DB_HOST=database-navapack.creo8wqa0o23.eu-north-1.rds.amazonaws.com
+DB_PORT=5432
