@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from auditlog.registry import auditlog
 
 class Salesperson(models.Model):
     """Separate model for Sales Representatives."""
@@ -184,3 +184,13 @@ class Unit(models.Model):
 
     def __str__(self):
         return self.name
+
+
+auditlog.register(Salesperson)
+auditlog.register(CustomerPipeline)
+auditlog.register(DailyActivity)
+auditlog.register(DropdownLists)
+auditlog.register(ProductService)
+auditlog.register(SalesStage)
+auditlog.register(ActivityType)
+auditlog.register(Unit)
