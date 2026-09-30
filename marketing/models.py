@@ -194,3 +194,4 @@ auditlog.register(ProductService)
 auditlog.register(SalesStage)
 auditlog.register(ActivityType)
 auditlog.register(Unit)
+

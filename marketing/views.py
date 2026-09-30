@@ -4,7 +4,10 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from auditlog.models import LogEntry
 
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from .serializers import AuditLogSerializer
 from .models import (
     Salesperson,
     CustomerPipeline,
@@ -579,3 +582,15 @@ class UnitDetailAPIView(APIView):
             return Response({'error': 'Unit not found'}, status=status.HTTP_404_NOT_FOUND)
         obj.delete()
         return Response({'message': 'Unit deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+class AuditLogAPIView(APIView):
+    permission_classes =  IsAdminUser
+
+    def get(self, request):
+        logs = LogEntry.objects.all().order_by('-timestamp')
+
+        serializer = AuditLogSerializer(logs, many=True)
+
+        return Response(serializer.data)

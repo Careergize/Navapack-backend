@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .reports import ReportAPIView, WeeklyReportAPIView, MonthlyReportAPIView
+from .views import AuditLogAPIView
 urlpatterns = [
     # Salespersons
     path('salespersons/', views.SalespersonListCreateAPIView.as_view(), name='salesperson-list-create'),
@@ -31,4 +32,10 @@ urlpatterns = [
     path('reports/', ReportAPIView.as_view(), name='reports'),               # ?period=weekly|monthly, or start_date & end_date
     path('reports/weekly/', WeeklyReportAPIView.as_view()),
     path('reports/monthly/', MonthlyReportAPIView.as_view()),
+
+    path(
+        'audit-logs/',
+        AuditLogAPIView.as_view(),
+        name='audit-logs'
+    ),
 ]
