@@ -11,7 +11,7 @@ from .models import (
     Unit,
 )
 
-
+from auditlog.models import LogEntry
 class SalespersonSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -85,3 +85,24 @@ class UnitSerializer(serializers.ModelSerializer):
         model = Unit
         fields = '__all__'
 
+from rest_framework import serializers
+from auditlog.models import LogEntry
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(
+        source='actor.username',
+        read_only=True
+    )
+
+    class Meta:
+        model = LogEntry
+        fields = [
+            'id',
+            'action',
+            'user',
+            'timestamp',
+            'object_id',
+            'object_repr',
+            'changes',
+        ]

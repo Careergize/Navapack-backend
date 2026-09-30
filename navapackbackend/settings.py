@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "products",
     "Auth",
     'marketing',
+      'auditlog',
 ]
 
 
@@ -71,6 +72,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware'
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
+
 ]
 
 
