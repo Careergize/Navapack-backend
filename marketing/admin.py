@@ -10,6 +10,7 @@ from .models import (
     SalesStage,
     ActivityType,
     Unit,
+    Department,
 )
 
 
@@ -63,9 +64,12 @@ admin.site.register(ProductService)
 admin.site.register(SalesStage)
 admin.site.register(ActivityType)
 admin.site.register(Unit)
+admin.site.register(Department)
 
 
 # Audit log
+admin.site.unregister(LogEntry)
+
 @admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin):
     list_display = (

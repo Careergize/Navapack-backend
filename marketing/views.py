@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import generics
 from auditlog.models import LogEntry
 
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -17,6 +18,7 @@ from .models import (
     SalesStage,
     ActivityType,
     Unit,
+    Department,
 )
 from .serializers import (
     SalespersonSerializer,
@@ -27,6 +29,7 @@ from .serializers import (
     SalesStageSerializer,
     ActivityTypeSerializer,
     UnitSerializer,
+    DepartmentSerializer,
 )
 
 
@@ -403,6 +406,16 @@ class DropdownListsAPIView(APIView):
 # ==========================================
 # 7. MASTER LOOKUP API VIEWS
 # ==========================================
+
+class DepartmentListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+
+class DepartmentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
 
 class ProductServiceListCreateAPIView(APIView):
     def get(self, request):

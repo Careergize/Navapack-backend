@@ -16,6 +16,8 @@ urlpatterns = [
     path('daily-activities/<int:pk>/', views.DailyActivityDetailAPIView.as_view(), name='daily-activity-detail'),
 
     # Lookup/master data
+    path('departments/', views.DepartmentListCreateAPIView.as_view(), name='department-list-create'),
+    path('departments/<int:pk>/', views.DepartmentDetailAPIView.as_view(), name='department-detail'),
     path('product-services/', views.ProductServiceListCreateAPIView.as_view(), name='product-service-list-create'),
     path('product-services/<int:pk>/', views.ProductServiceDetailAPIView.as_view(), name='product-service-detail'),
     path('sales-stages/', views.SalesStageListCreateAPIView.as_view(), name='sales-stage-list-create'),
