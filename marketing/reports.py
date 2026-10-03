@@ -114,7 +114,7 @@ SECTION1_ROWS = [
 ]
 
 
-def build_sales_performance(start, end, salesperson_id=None):
+def build_sales_performance(start, end, salesperson_id=None, period_only=False):
     today = timezone.localdate()
     as_of = min(end, today)  # overdue is a "right now" snapshot, never in the future
 
@@ -145,6 +145,9 @@ def build_sales_performance(start, end, salesperson_id=None):
     won_in_range = Q(pipeline_deals__sales_stage__in=WON_STAGES,
                      pipeline_deals__stage_last_updated__range=(start, end))
     open_deal = ~Q(pipeline_deals__sales_stage__in=CLOSED_STAGES)
+    overdue_filter = open_deal & Q(pipeline_deals__next_followup_date__lt=as_of)
+    if period_only:
+        overdue_filter &= Q(pipeline_deals__next_followup_date__range=(start, end))
     pipeline_stats = {
         p.id: p for p in people.annotate(
             samples=Count('pipeline_deals', distinct=True,
@@ -153,7 +156,7 @@ def build_sales_performance(start, end, salesperson_id=None):
             orders_count=Count('pipeline_deals', distinct=True, filter=won_in_range),
             order_value=Sum('pipeline_deals__actual_order_value_ugx', filter=won_in_range),
             overdue=Count('pipeline_deals', distinct=True,
-                          filter=open_deal & Q(pipeline_deals__next_followup_date__lt=as_of)),
+                          filter=overdue_filter),
         )
     }
 
@@ -307,6 +310,23 @@ def build_orders_lost(start, end, salesperson_id=None):
 # ----------------------------------------------------------------------
 # Views
 # ----------------------------------------------------------------------
+def build_report(start, end, period='custom', salesperson_id=None, limit=10,
+                 touched_only=False, period_only=False):
+    """Shared payload for JSON reports and downloads; preserve legacy JSON defaults."""
+    return {
+        'period': period,
+        'start_date': start,
+        'end_date': end,
+        'generated_at': timezone.now(),
+        'salesperson_filter': salesperson_id,
+        'sales_performance': build_sales_performance(start, end, salesperson_id, period_only),
+        'top_opportunities': build_top_opportunities(start, end, limit, salesperson_id, touched_only),
+        'market_intelligence': build_market_intelligence(start, end, salesperson_id),
+        'management_delays': build_management_delays(start, end, salesperson_id),
+        'orders_lost': build_orders_lost(start, end, salesperson_id),
+    }
+
+
 class ReportAPIView(APIView):
     """Full 5-section report for a weekly, monthly or custom date range."""
     default_period = 'weekly'
@@ -321,18 +341,8 @@ class ReportAPIView(APIView):
 
         touched_only = request.GET.get('touched_only', '').lower() in ('1', 'true', 'yes')
 
-        return Response({
-            'period': period,
-            'start_date': start,
-            'end_date': end,
-            'generated_at': timezone.now(),
-            'salesperson_filter': salesperson_id,
-            'sales_performance': build_sales_performance(start, end, salesperson_id),
-            'top_opportunities': build_top_opportunities(start, end, limit, salesperson_id, touched_only),
-            'market_intelligence': build_market_intelligence(start, end, salesperson_id),
-            'management_delays': build_management_delays(start, end, salesperson_id),
-            'orders_lost': build_orders_lost(start, end, salesperson_id),
-        }, status=status.HTTP_200_OK)
+        return Response(build_report(start, end, period, salesperson_id, limit, touched_only),
+                        status=status.HTTP_200_OK)
 
 
 class WeeklyReportAPIView(ReportAPIView):

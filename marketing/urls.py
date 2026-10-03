@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from .reports import ReportAPIView, WeeklyReportAPIView, MonthlyReportAPIView
+from .report_exports import ExcelReportExportAPIView, PDFReportExportAPIView
 from .views import AuditLogAPIView
 urlpatterns = [
     path('followup-notifications/', views.FollowupNotificationListAPIView.as_view(), name='followup-notifications'),
@@ -33,6 +34,8 @@ urlpatterns = [
     path('weekly-report/', views.WeeklyReportAPIView.as_view(), name='weekly-report'),
     path('lists/', views.DropdownListsAPIView.as_view(), name='dropdown-lists'),
     path('reports/', ReportAPIView.as_view(), name='reports'),               # ?period=weekly|monthly, or start_date & end_date
+    path('reports/export/excel/', ExcelReportExportAPIView.as_view(), name='reports-export-excel'),
+    path('reports/export/pdf/', PDFReportExportAPIView.as_view(), name='reports-export-pdf'),
     path('reports/weekly/', WeeklyReportAPIView.as_view()),
     path('reports/monthly/', MonthlyReportAPIView.as_view()),
 
