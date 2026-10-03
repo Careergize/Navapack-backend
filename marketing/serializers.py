@@ -9,6 +9,7 @@ from .models import (
     SalesStage,
     ActivityType,
     Unit,
+    Department,
 )
 
 from auditlog.models import LogEntry
@@ -56,6 +57,12 @@ class DropdownListsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DropdownLists
         fields = '__all__'
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ('id', 'name')
 
 
 class ProductServiceSerializer(serializers.ModelSerializer):

@@ -158,6 +158,16 @@ def save(self, *args, **kwargs):
         super().save(update_fields=['prospect_id'])
 
 
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class ProductService(models.Model):
     name = models.CharField(max_length=255)
 
@@ -194,4 +204,5 @@ auditlog.register(ProductService)
 auditlog.register(SalesStage)
 auditlog.register(ActivityType)
 auditlog.register(Unit)
+auditlog.register(Department)
 

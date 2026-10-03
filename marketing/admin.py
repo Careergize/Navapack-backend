@@ -9,6 +9,7 @@ from .models import (
     SalesStage,
     ActivityType,
     Unit,
+    Department,
 )
 
 
@@ -62,3 +63,40 @@ admin.site.register(ProductService)
 admin.site.register(SalesStage)
 admin.site.register(ActivityType)
 admin.site.register(Unit)
+admin.site.register(Department)
+
+
+# Audit log
+admin.site.unregister(LogEntry)
+
+@admin.register(LogEntry)
+class LogEntryAdmin(admin.ModelAdmin):
+    list_display = (
+        'timestamp',
+        'actor',
+        'action',
+        'content_type',
+        'object_repr',
+    )
+
+    list_filter = (
+        'action',
+        'content_type',
+    )
+
+    search_fields = (
+        'object_repr',
+        'object_id',
+    )
+
+    readonly_fields = (
+        'timestamp',
+        'actor',
+        'action',
+        'content_type',
+        'object_id',
+        'object_repr',
+        'changes',
+        'remote_addr',
+    )
+
