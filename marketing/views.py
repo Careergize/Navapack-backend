@@ -599,11 +599,45 @@ class UnitDetailAPIView(APIView):
 
 
 class AuditLogAPIView(APIView):
-    permission_classes =  IsAdminUser
 
     def get(self, request):
-        logs = LogEntry.objects.all().order_by('-timestamp')
+        logs = LogEntry.objects.select_related(
+            "actor",
+            "content_type",
+        ).order_by("-timestamp")
 
-        serializer = AuditLogSerializer(logs, many=True)
+        data = []
 
-        return Response(serializer.data)
+        for log in logs:
+            data.append({
+                "id": log.id,
+                "timestamp": log.timestamp,
+                "actor": {
+                    "id": log.actor.id if log.actor else None,
+                    "username": (
+                        log.actor.username
+                        if log.actor
+                        else "System"
+                    ),
+                },
+                "action": log.get_action_display(),
+                "action_code": log.action,
+                "content_type": (
+                    log.content_type.model
+                    if log.content_type
+                    else None
+                ),
+                "object_id": log.object_id,
+                "object_repr": log.object_repr,
+                "changes": log.changes,
+                "remote_addr": log.remote_addr,
+                "additional_data": log.additional_data,
+            })
+
+        return Response(
+            {
+                "count": len(data),
+                "results": data,
+            },
+            status=status.HTTP_200_OK,
+        )

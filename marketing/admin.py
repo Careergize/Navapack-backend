@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from auditlog.models import LogEntry
 from .models import (
     Salesperson,
     CustomerPipeline,

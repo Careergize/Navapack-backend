@@ -196,13 +196,3 @@ class Unit(models.Model):
         return self.name
 
 
-auditlog.register(Salesperson)
-auditlog.register(CustomerPipeline)
-auditlog.register(DailyActivity)
-auditlog.register(DropdownLists)
-auditlog.register(ProductService)
-auditlog.register(SalesStage)
-auditlog.register(ActivityType)
-auditlog.register(Unit)
-auditlog.register(Department)
-
