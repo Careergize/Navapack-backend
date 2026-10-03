@@ -13,14 +13,29 @@ from .models import (
 )
 
 from auditlog.models import LogEntry
+from .permissions import is_management
+
+
+class SalesRecordSerializerMixin:
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get('request')
+        if request is not None and not is_management(request.user):
+            fields['salesperson'].read_only = True
+            fields[self.record_date_field].read_only = True
+        return fields
+
+
 class SalespersonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Salesperson
         fields = '__all__'
+        read_only_fields = ('user',)
 
 
-class CustomerPipelineSerializer(serializers.ModelSerializer):
+class CustomerPipelineSerializer(SalesRecordSerializerMixin, serializers.ModelSerializer):
+    record_date_field = 'date_added'
 
     salesperson_detail = SalespersonSerializer(
         source='salesperson',
@@ -36,7 +51,8 @@ class CustomerPipelineSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DailyActivitySerializer(serializers.ModelSerializer):
+class DailyActivitySerializer(SalesRecordSerializerMixin, serializers.ModelSerializer):
+    record_date_field = 'date'
 
     salesperson_detail = SalespersonSerializer(
         source='salesperson',

@@ -17,11 +17,13 @@ from .models import (
 class SalespersonAdmin(admin.ModelAdmin):
     list_display = (
         'name',
+        'user',
         'email',
         'phone',
         'department',
         'is_active',
     )
+    autocomplete_fields = ('user',)
 
 
 @admin.register(CustomerPipeline)

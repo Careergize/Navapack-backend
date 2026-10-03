@@ -1,9 +1,14 @@
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 from auditlog.registry import auditlog
 
 class Salesperson(models.Model):
     """Separate model for Sales Representatives."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        related_name='salesperson', null=True, blank=True,
+    )
     name = models.CharField(max_length=100, unique=True)
     email = models.EmailField(blank=True, default='')
     phone = models.CharField(max_length=50, blank=True, default='')

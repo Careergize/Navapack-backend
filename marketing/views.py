@@ -9,6 +9,7 @@ from auditlog.models import LogEntry
 
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .serializers import AuditLogSerializer
+from .permissions import SalesRecordPermission, get_salesperson, is_management
 from .models import (
     Salesperson,
     CustomerPipeline,
@@ -93,6 +94,7 @@ class SalespersonDetailAPIView(APIView):
 # ==========================================
 
 class CustomerPipelineListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated, SalesRecordPermission]
     """List customer pipeline records or create a new deal."""
 
     def get(self, request):
@@ -118,14 +120,18 @@ class CustomerPipelineListCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = CustomerPipelineSerializer(data=request.data)
+        serializer = CustomerPipelineSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            if is_management(request.user):
+                serializer.save()
+            else:
+                serializer.save(salesperson=get_salesperson(request.user), date_added=timezone.localdate())
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomerPipelineDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated, SalesRecordPermission]
     """Retrieve, update, or delete a customer pipeline record."""
 
     def get_object(self, pk):
@@ -145,16 +151,21 @@ class CustomerPipelineDetailAPIView(APIView):
         pipeline = self.get_object(pk)
         if not pipeline:
             return Response({'error': 'Pipeline record not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = CustomerPipelineSerializer(pipeline, data=request.data, partial=True)
+        self.check_object_permissions(request, pipeline)
+        serializer = CustomerPipelineSerializer(pipeline, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def patch(self, request, pk):
+        return self.put(request, pk)
+
     def delete(self, request, pk):
         pipeline = self.get_object(pk)
         if not pipeline:
             return Response({'error': 'Pipeline record not found'}, status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(request, pipeline)
         pipeline.delete()
         return Response({'message': 'Pipeline record deleted'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -164,6 +175,7 @@ class CustomerPipelineDetailAPIView(APIView):
 # ==========================================
 
 class DailyActivityListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated, SalesRecordPermission]
     """List daily logs or record a new daily activity."""
 
     def get(self, request):
@@ -187,14 +199,18 @@ class DailyActivityListCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = DailyActivitySerializer(data=request.data)
+        serializer = DailyActivitySerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            if is_management(request.user):
+                serializer.save()
+            else:
+                serializer.save(salesperson=get_salesperson(request.user), date=timezone.localdate())
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DailyActivityDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated, SalesRecordPermission]
     """Retrieve, update, or delete a daily activity entry."""
 
     def get_object(self, pk):
@@ -214,16 +230,21 @@ class DailyActivityDetailAPIView(APIView):
         activity = self.get_object(pk)
         if not activity:
             return Response({'error': 'Activity log not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = DailyActivitySerializer(activity, data=request.data, partial=True)
+        self.check_object_permissions(request, activity)
+        serializer = DailyActivitySerializer(activity, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def patch(self, request, pk):
+        return self.put(request, pk)
+
     def delete(self, request, pk):
         activity = self.get_object(pk)
         if not activity:
             return Response({'error': 'Activity log not found'}, status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(request, activity)
         activity.delete()
         return Response({'message': 'Activity log deleted'}, status=status.HTTP_204_NO_CONTENT)
 
