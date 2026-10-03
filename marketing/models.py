@@ -142,6 +142,34 @@ class DropdownLists(models.Model):
     departments = models.JSONField(default=list)
 
 
+class FollowupNotification(models.Model):
+    """One delivery per follow-up, recipient and channel; also records routing failures."""
+    customer_pipeline = models.ForeignKey(CustomerPipeline, on_delete=models.CASCADE,
+        related_name='followup_notifications')
+    notification_type = models.CharField(max_length=20)
+    scheduled_for = models.DateField()
+    recipient_key = models.CharField(max_length=80)
+    recipient_name = models.CharField(max_length=150, blank=True)
+    department = models.CharField(max_length=100, blank=True)
+    channel = models.CharField(max_length=10, choices=[('email', 'Email'), ('whatsapp', 'WhatsApp')])
+    destination = models.CharField(max_length=254, blank=True)
+    status = models.CharField(max_length=10, default='pending', choices=[
+        ('pending', 'Pending'), ('sending', 'Sending / review required'),
+        ('sent', 'Accepted'), ('failed', 'Failed'), ('unknown', 'Unknown / review required')])
+    error = models.CharField(max_length=255, blank=True)
+    provider_message_id = models.CharField(max_length=255, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [models.UniqueConstraint(fields=['customer_pipeline', 'notification_type',
+            'scheduled_for', 'recipient_key', 'channel'], name='unique_followup_delivery')]
+
+
+
+
 
 stage_last_updated = models.DateField(default=timezone.localdate)
 def save(self, *args, **kwargs):

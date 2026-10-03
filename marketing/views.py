@@ -10,6 +10,22 @@ from auditlog.models import LogEntry
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .serializers import AuditLogSerializer
 from .permissions import SalesRecordPermission, get_salesperson, is_management
+from .permissions import ManagementOnly
+from .models import FollowupNotification
+from .serializers import FollowupNotificationSerializer
+from rest_framework.pagination import PageNumberPagination
+
+
+class NotificationHistoryPagination(PageNumberPagination):
+    page_size = 50
+
+
+class FollowupNotificationListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, ManagementOnly]
+    queryset = FollowupNotification.objects.select_related('customer_pipeline').all()
+    serializer_class = FollowupNotificationSerializer
+    pagination_class = NotificationHistoryPagination
+
 from .models import (
     Salesperson,
     CustomerPipeline,

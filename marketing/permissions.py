@@ -26,7 +26,6 @@ class SalesRecordPermission(BasePermission):
         if request.method not in SAFE_METHODS and not is_management(request.user):
             get_salesperson(request.user)
         return True
-
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS or is_management(request.user):
             return True
@@ -36,3 +35,8 @@ class SalesRecordPermission(BasePermission):
         if getattr(obj, date_field) != timezone.localdate():
             raise PermissionDenied('You can modify only records dated today.')
         return True
+
+
+class ManagementOnly(BasePermission):
+    def has_permission(self, request, view):
+        return is_management(request.user)

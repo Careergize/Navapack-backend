@@ -162,7 +162,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.environ.get("TIME_ZONE", "UTC")
 
 USE_I18N = True
 
@@ -192,6 +192,26 @@ MEDIA_ROOT = BASE_DIR / "media"
 # =========================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Reuse the existing .env; never place notification credentials in source code.
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() == 'true'
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '20'))
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+WHATSAPP_PROVIDER = os.environ.get('WHATSAPP_PROVIDER', '')
+WHATSAPP_API_URL = os.environ.get('WHATSAPP_API_URL', '')
+WHATSAPP_ACCESS_TOKEN = os.environ.get('WHATSAPP_ACCESS_TOKEN', '')
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get('WHATSAPP_PHONE_NUMBER_ID', '')
+WHATSAPP_BUSINESS_ACCOUNT_ID = os.environ.get('WHATSAPP_BUSINESS_ACCOUNT_ID', '')
+WHATSAPP_TEMPLATE_LANGUAGE = os.environ.get('WHATSAPP_TEMPLATE_LANGUAGE', 'en_US')
+WHATSAPP_TIMEOUT = int(os.environ.get('WHATSAPP_TIMEOUT', '20'))
+WHATSAPP_TEMPLATES = {kind: os.environ.get('WHATSAPP_TEMPLATE_' + kind.upper(), '')
+                      for kind in ('upcoming', 'due', 'missed')}
 
 
 # =========================================================

@@ -1,0 +1,14 @@
+<!doctype html>
+<html><body style="font-family:Arial,sans-serif;color:#243447;line-height:1.6">
+<h2>{{ title }}</h2><p>Hello {{ recipient }},</p><p>{{ instruction }}</p>
+<table cellpadding="8" style="border-collapse:collapse;background:#f4f7fa">
+<tr><th align="left">Customer</th><td>{{ pipeline.customer_company }}</td></tr>
+<tr><th align="left">Prospect</th><td>{{ pipeline.prospect_id }}</td></tr>
+<tr><th align="left">Contact</th><td>{{ pipeline.contact_person|default:"Not specified" }} / {{ pipeline.telephone|default:"Not specified" }}</td></tr>
+<tr><th align="left">Location</th><td>{{ pipeline.location_town|default:"Not specified" }}</td></tr>
+<tr><th align="left">Responsible employee</th><td>{{ pipeline.salesperson.name }} ({{ pipeline.salesperson.department }})</td></tr>
+<tr><th align="left">Next action</th><td>{{ pipeline.next_action|default:"Not specified" }}</td></tr>
+<tr><th align="left">Follow-up date</th><td>{{ pipeline.next_followup_date|date:"d F Y" }}</td></tr>
+<tr><th align="left">Status / stage</th><td>{{ pipeline.followup_status }} / {{ pipeline.sales_stage }}</td></tr>
+<tr><th align="left">Product/service</th><td>{{ pipeline.product_service|default:"Not specified" }}</td></tr>
+</table><p>Please update the customer pipeline after completing the follow-up.</p></body></html>

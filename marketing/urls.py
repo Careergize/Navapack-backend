@@ -3,6 +3,7 @@ from . import views
 from .reports import ReportAPIView, WeeklyReportAPIView, MonthlyReportAPIView
 from .views import AuditLogAPIView
 urlpatterns = [
+    path('followup-notifications/', views.FollowupNotificationListAPIView.as_view(), name='followup-notifications'),
     # Salespersons
     path('salespersons/', views.SalespersonListCreateAPIView.as_view(), name='salesperson-list-create'),
     path('salespersons/<int:pk>/', views.SalespersonDetailAPIView.as_view(), name='salesperson-detail'),

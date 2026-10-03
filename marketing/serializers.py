@@ -129,3 +129,14 @@ class AuditLogSerializer(serializers.ModelSerializer):
             'object_repr',
             'changes',
         ]
+
+
+from .models import FollowupNotification
+
+
+class FollowupNotificationSerializer(serializers.ModelSerializer):
+    customer = serializers.CharField(source='customer_pipeline.customer_company', read_only=True)
+
+    class Meta:
+        model = FollowupNotification
+        fields = '__all__'

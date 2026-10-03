@@ -1,4 +1,21 @@
 from django.contrib import admin
+from .models import FollowupNotification
+
+
+@admin.register(FollowupNotification)
+class FollowupNotificationAdmin(admin.ModelAdmin):
+    list_display = ('customer_pipeline', 'notification_type', 'scheduled_for',
+                    'recipient_name', 'department', 'channel', 'status', 'created_at', 'updated_at')
+    list_filter = ('notification_type', 'channel', 'status', 'department')
+    search_fields = ('customer_pipeline__customer_company', 'recipient_name')
+    readonly_fields = tuple(field.name for field in FollowupNotification._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 from auditlog.models import LogEntry
 from .models import (
     Salesperson,

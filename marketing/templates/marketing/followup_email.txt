@@ -1,0 +1,19 @@
+{{ title }}
+
+Hello {{ recipient }},
+
+{{ instruction }}
+
+Customer: {{ pipeline.customer_company }}
+Prospect: {{ pipeline.prospect_id }}
+Contact person: {{ pipeline.contact_person|default:"Not specified" }}
+Customer telephone: {{ pipeline.telephone|default:"Not specified" }}
+Location: {{ pipeline.location_town|default:"Not specified" }}
+Responsible employee: {{ pipeline.salesperson.name }} ({{ pipeline.salesperson.department }})
+Next action: {{ pipeline.next_action|default:"Not specified" }}
+Follow-up date: {{ pipeline.next_followup_date|date:"d F Y" }}
+Status: {{ pipeline.followup_status }}
+Sales stage: {{ pipeline.sales_stage }}
+Product/service: {{ pipeline.product_service|default:"Not specified" }}
+
+Please update the customer pipeline after completing the follow-up.
