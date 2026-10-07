@@ -15,7 +15,8 @@ def sync_salesperson(user_id, using='default'):
         eligible = (user.is_active and profile is not None and profile.is_approved
                     and profile.department.strip().casefold() == 'sales')
         if not eligible:
-            if person is not None and person.is_active:
+            if (person is not None and person.is_active
+                    and person.department.strip().casefold() == 'sales'):
                 person.is_active = False
                 person.save(using=using, update_fields=['is_active'])
             return

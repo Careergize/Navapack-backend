@@ -32,7 +32,7 @@ or emails.
 Run `python manage.py migrate` during deployment to backfill existing approved
 Sales users. Users without profiles need a profile with an employee ID,
 department `Sales`, and approval first. Losing approval, leaving Sales, account
-deactivation, or profile deletion deactivates the linked salesperson while
+deactivation, or profile deletion deactivates the linked Sales salesperson while
 preserving historical records. Bulk `QuerySet.update()` bypasses synchronization;
 use individual model saves for profile/account changes.
 
@@ -48,6 +48,17 @@ Departments are managed in Django admin and through these endpoints:
 
 The migration also adds Sales, HR, and Marketing to the existing
 `/api/lists/` department dropdown while preserving existing options.
+
+## Product API
+
+## Customer contact email
+
+Customer pipeline (`/api/pipeline/`) and daily activity (`/api/daily-activities/`)
+records accept and return an optional `email` field, for example
+`"email": "contact@example.com"`. POST, PUT, and PATCH validate email format;
+omit it on creation or send `"email": ""` when no contact email is available.
+Existing records receive an empty string after `python manage.py migrate`.
+Both fields can be edited and searched in Django admin.
 
 ## Product API
 

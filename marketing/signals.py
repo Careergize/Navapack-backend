@@ -23,5 +23,7 @@ def sync_user_salesperson(sender, instance, raw=False, using='default', **kwargs
 def deactivate_profile_salesperson(sender, instance, using='default', **kwargs):
     # Retain pipeline/activity ownership when a profile or user is removed.
     for person in Salesperson.objects.using(using).filter(user_id=instance.user_id, is_active=True):
+        if person.department.strip().casefold() != 'sales':
+            continue
         person.is_active = False
         person.save(using=using, update_fields=['is_active'])

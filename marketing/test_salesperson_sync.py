@@ -79,6 +79,14 @@ class SalespersonSyncTests(TestCase):
         self.profile.save()
         self.assertEqual(Salesperson.objects.count(), 2)
 
+    def test_user_save_preserves_manual_marketing_person(self):
+        person = Salesperson.objects.create(user=self.user, name='Marketing Rep', department='Marketing')
+        self.user.email = 'changed@example.com'
+        self.user.save()
+        person.refresh_from_db()
+        self.assertTrue(person.is_active)
+        self.assertEqual(person.department, 'Marketing')
+
     def test_blank_names_fall_back_to_email_then_username(self):
         self.user.first_name = self.user.last_name = ''
         self.user.save()

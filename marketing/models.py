@@ -41,6 +41,7 @@ class CustomerPipeline(models.Model):
     location_town = models.CharField(max_length=100, blank=True, default='')
     contact_person = models.CharField(max_length=100, blank=True, default='')
     telephone = models.CharField(max_length=50, blank=True, default='')
+    email = models.EmailField(blank=True, default='')
     customer_type = models.CharField(max_length=100, blank=True, default='')
 
     # Product & Value
@@ -106,6 +107,7 @@ class DailyActivity(models.Model):
     prospect_status = models.CharField(max_length=50, default='Existing')  # New Prospect, Existing
     contact_person = models.CharField(max_length=100, blank=True, default='')
     telephone = models.CharField(max_length=50, blank=True, default='')
+    email = models.EmailField(blank=True, default='')
 
     # Interaction
     product_service = models.CharField(max_length=255, blank=True, default='')

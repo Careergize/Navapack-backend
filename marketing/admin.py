@@ -48,6 +48,7 @@ class CustomerPipelineAdmin(admin.ModelAdmin):
     list_display = (
         'prospect_id',
         'customer_company',
+        'email',
         'salesperson',
         'sales_stage',
         'probability_pct',
@@ -56,6 +57,7 @@ class CustomerPipelineAdmin(admin.ModelAdmin):
         'prospect_id',
         'customer_company',
         'contact_person',
+        'email',
     )
     list_filter = (
         'sales_stage',
@@ -69,11 +71,13 @@ class DailyActivityAdmin(admin.ModelAdmin):
         'date',
         'salesperson',
         'customer_company',
+        'email',
         'activity_type',
     )
     search_fields = (
         'customer_company',
         'contact_person',
+        'email',
     )
 
 
