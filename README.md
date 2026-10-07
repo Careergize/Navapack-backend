@@ -20,6 +20,22 @@ and `python manage.py migrate`. The requirements include
 create its database tables. Each developer installs dependencies in
 their own Python environment.
 
+## Salesperson linking
+
+Active users with an approved profile in the Sales department automatically
+receive a linked salesperson when their user or profile is saved, including
+approval through the API and edits in Django admin. Names fall back to email
+or username when blank; duplicate names receive a user ID suffix. Existing
+unlinked salesperson records are not automatically claimed by matching names
+or emails.
+
+Run `python manage.py migrate` during deployment to backfill existing approved
+Sales users. Users without profiles need a profile with an employee ID,
+department `Sales`, and approval first. Losing approval, leaving Sales, account
+deactivation, or profile deletion deactivates the linked salesperson while
+preserving historical records. Bulk `QuerySet.update()` bypasses synchronization;
+use individual model saves for profile/account changes.
+
 ## Department API
 
 Departments are managed in Django admin and through these endpoints:

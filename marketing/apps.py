@@ -7,3 +7,4 @@ class MarketingConfig(AppConfig):
 
     def ready(self):
         import marketing.auditlog
+        import marketing.signals
