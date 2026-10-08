@@ -48,6 +48,7 @@ class CustomerPipeline(models.Model):
     product_service = models.CharField(max_length=255, blank=True, default='')
     requirement_specifications = models.TextField(blank=True, default='')
     estimated_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    estimated_price = models.DecimalField(max_digits=15, decimal_places=2, default=0, blank=True)
     unit = models.CharField(max_length=50, blank=True, default='')
     estimated_value_ugx = models.DecimalField(max_digits=15, decimal_places=2, default=0)
 

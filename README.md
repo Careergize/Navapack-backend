@@ -49,9 +49,13 @@ Departments are managed in Django admin and through these endpoints:
 The migration also adds Sales, HR, and Marketing to the existing
 `/api/lists/` department dropdown while preserving existing options.
 
-## Product API
-
 ## Customer contact email
+
+Customer pipeline records also accept and return `estimated_price`, a decimal
+amount with up to 15 digits and two decimal places (for example,
+`"estimated_price": "1250.75"`). It defaults to `0.00` for existing records and
+when omitted on creation. It is editable and visible in Django admin. The field
+is stored independently of `estimated_value_ugx`; no total is calculated automatically.
 
 Customer pipeline (`/api/pipeline/`) and daily activity (`/api/daily-activities/`)
 records accept and return an optional `email` field, for example

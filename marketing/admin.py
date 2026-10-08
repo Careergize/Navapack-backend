@@ -52,6 +52,7 @@ class CustomerPipelineAdmin(admin.ModelAdmin):
         'salesperson',
         'sales_stage',
         'probability_pct',
+        'estimated_price',
     )
     search_fields = (
         'prospect_id',
