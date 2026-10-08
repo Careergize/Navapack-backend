@@ -56,6 +56,8 @@ amount with up to 15 digits and two decimal places (for example,
 `"estimated_price": "1250.75"`). It defaults to `0.00` for existing records and
 when omitted on creation. It is editable and visible in Django admin. The field
 is stored independently of `estimated_value_ugx`; no total is calculated automatically.
+The API also accepts and returns `estimated_price_ugx` as an alias for the same
+database field. If both names are supplied, their values must match.
 
 Customer pipeline (`/api/pipeline/`) and daily activity (`/api/daily-activities/`)
 records accept and return an optional `email` field, for example

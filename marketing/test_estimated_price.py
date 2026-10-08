@@ -40,3 +40,31 @@ class EstimatedPriceTests(APITestCase):
                 response = self.client.patch(detail, {'estimated_price': price}, format='json')
                 self.assertEqual(response.status_code, 400)
                 self.assertIn('estimated_price', response.data)
+
+    def test_frontend_alias_saves_and_updates_same_database_field(self):
+        response = self.client.post(self.url, {**self.data, 'estimated_price_ugx': '1250.75'}, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        obj = CustomerPipeline.objects.get(pk=response.data['id'])
+        self.assertEqual(obj.estimated_price, Decimal('1250.75'))
+        self.assertEqual(response.data['estimated_price_ugx'], '1250.75')
+        self.assertEqual(response.data['estimated_price'], '1250.75')
+        detail = reverse('pipeline-detail', args=[obj.pk])
+        for method in ('patch', 'put'):
+            response = getattr(self.client, method)(detail, {'estimated_price_ugx': '99.50'}, format='json')
+            self.assertEqual(response.status_code, 200, response.data)
+            obj.refresh_from_db()
+            self.assertEqual(obj.estimated_price, Decimal('99.50'))
+        self.assertEqual(self.client.get(detail).data['estimated_price_ugx'], '99.50')
+
+    def test_alias_validation_and_conflicting_prices(self):
+        for extra in ({'estimated_price_ugx': 'invalid'}, {'estimated_price_ugx': '1.234'},
+                      {'estimated_price': '10.00', 'estimated_price_ugx': '20.00'}):
+            with self.subTest(extra=extra):
+                response = self.client.post(self.url, {**self.data, **extra}, format='json')
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('estimated_price_ugx', response.data)
+                self.assertFalse(CustomerPipeline.objects.exists())
+        response = self.client.post(self.url, {**self.data, 'estimated_price': '10',
+                                               'estimated_price_ugx': '10.00'}, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(CustomerPipeline.objects.get().estimated_price, Decimal('10.00'))

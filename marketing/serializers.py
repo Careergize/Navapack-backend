@@ -36,6 +36,19 @@ class SalespersonSerializer(serializers.ModelSerializer):
 
 class CustomerPipelineSerializer(SalesRecordSerializerMixin, serializers.ModelSerializer):
     record_date_field = 'date_added'
+    estimated_price_ugx = serializers.DecimalField(
+        source='estimated_price', max_digits=15, decimal_places=2, required=False,
+    )
+
+    def to_internal_value(self, data):
+        if 'estimated_price' in data and 'estimated_price_ugx' in data:
+            price = self.fields['estimated_price'].run_validation(data['estimated_price'])
+            alias = self.fields['estimated_price_ugx'].run_validation(data['estimated_price_ugx'])
+            if price != alias:
+                raise serializers.ValidationError({
+                    'estimated_price_ugx': 'Must match estimated_price when both fields are supplied.',
+                })
+        return super().to_internal_value(data)
 
     salesperson_detail = SalespersonSerializer(
         source='salesperson',
