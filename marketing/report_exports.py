@@ -66,7 +66,9 @@ SECTIONS = [
         ('date', 'Date', 'date', 10), ('customer', 'Customer / Company', 'text', 13),
         ('salesperson', 'Salesperson', 'text', 12), ('support_required', 'Support / Issue Required', 'text', 23),
         ('responsible', 'Responsible Person / Dept.', 'text', 15),
-        ('required_by_date', 'Required By / Deadline', 'date', 12), ('status', 'Status', 'text', 15)]),
+        ('required_by_date', 'Required By / Deadline', 'date', 12), ('status', 'Status', 'text', 15),
+        ('last_contact_date', 'Last Contact Date', 'date', 12),
+        ('next_followup_date', 'Next Follow-up Date', 'date', 12)]),
     ('orders_lost', 'Orders Lost', 'ORDERS LOST & ROOT CAUSE ANALYSIS', [
         ('customer', 'Customer / Company', 'text', 13), ('salesperson', 'Salesperson', 'text', 12),
         ('product', 'Product / Service', 'text', 16), ('potential_value_ugx', 'Potential Value (UGX)', 'money', 11),

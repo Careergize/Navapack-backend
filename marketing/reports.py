@@ -281,6 +281,34 @@ def build_management_delays(start, end, salesperson_id=None):
             'status': a.issue_status,
             'is_past_deadline': bool(a.required_by_date and a.required_by_date < today and not resolved),
         })
+    # Include pending and overdue follow-ups contacted or scheduled in the period.
+    followups = (CustomerPipeline.objects.select_related('salesperson')
+                 .filter(Q(last_contact_date__range=(start, end))
+                         | Q(next_followup_date__range=(start, end)))
+                 .filter(Q(followup_status__iexact='PENDING')
+                         | Q(followup_status__iexact='OVERDUE'))
+                 .exclude(sales_stage__in=CLOSED_STAGES)
+                 .exclude(followup_status__iexact='COMPLETED'))
+    if salesperson_id:
+        followups = followups.filter(salesperson_id=salesperson_id)
+    for deal in followups.order_by('next_followup_date', 'id'):
+        overdue = bool(deal.next_followup_date and deal.next_followup_date < today)
+        followup_status = 'Overdue' if overdue else 'Pending'
+        result.append({
+            'id': f'pipeline-{deal.id}',
+            'source': 'customer_pipeline',
+            'prospect_id': deal.prospect_id,
+            'date': deal.next_followup_date,
+            'customer': deal.customer_company,
+            'salesperson': deal.salesperson.name,
+            'support_required': followup_status + ' follow-up: ' + (deal.next_action or 'Contact customer'),
+            'responsible': deal.salesperson.name,
+            'required_by_date': deal.next_followup_date,
+            'status': followup_status,
+            'last_contact_date': deal.last_contact_date,
+            'next_followup_date': deal.next_followup_date,
+            'is_past_deadline': overdue,
+        })
     return result
 
 

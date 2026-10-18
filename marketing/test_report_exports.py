@@ -83,7 +83,7 @@ class ReportExportTests(TestCase):
         self.assertIn('UGX', workbook['Top Opportunities']['D7'].number_format)
         self.assertEqual(workbook['Top Opportunities']['G7'].value.date(), date(2026, 9, 20))
         self.assertEqual(workbook['Market Intelligence'].max_row, 8)
-        self.assertEqual(workbook['Management Delays'].max_row, 8)
+        self.assertEqual(workbook['Management Delays'].max_row, 9)
         self.assertEqual(workbook['Orders Lost']['A7'].value, 'Lost inside')
         for sheet in workbook:
             self.assertTrue(sheet.freeze_panes)
@@ -196,3 +196,54 @@ class ReportExportTests(TestCase):
         # word separately to verify content is retained rather than flattened adjacency.
         for word in ('Long', 'note', 'business', 'details.'):
             self.assertEqual(text.split().count(word), 200)
+
+    @patch('marketing.reports.timezone.localdate', return_value=date(2026, 10, 18))
+    def test_management_delays_include_overdue_pipeline_followups(self, mocked_today):
+        self.deal('Completed followup', self.start, 10,
+                  next_followup_date=date(2026, 9, 10), followup_status='COMPLETED')
+        self.deal('Closed followup', self.start, 10,
+                  next_followup_date=date(2026, 9, 10), sales_stage='Order Won')
+        other = self.deal('Other rep overdue', self.start, 10,
+                          next_followup_date=date(2026, 9, 11))
+        CustomerPipeline.objects.filter(pk=other.pk).update(salesperson=self.other)
+        for kind in ('excel', 'pdf'):
+            _, content = self.download(kind, {**self.params, 'salesperson': self.person.id})
+            if kind == 'excel':
+                rows = list(load_workbook(BytesIO(content))['Management Delays'].iter_rows(min_row=7, values_only=True))
+                followups = [row for row in rows if row[6] == 'Overdue']
+                self.assertEqual(len(followups), 1)
+                self.assertEqual(followups[0][1], 'Inside customer')
+                self.assertEqual(followups[0][2], self.person.name)
+                self.assertEqual(followups[0][3], 'Overdue follow-up: Call customer')
+                self.assertEqual(followups[0][5].date(), date(2026, 9, 20))
+            else:
+                text = '\n'.join(page.extract_text() or '' for page in PdfReader(BytesIO(content)).pages)
+                self.assertIn('Overdue follow-up: Call customer', text)
+                self.assertIn('Overdue', text)
+                self.assertNotIn('Other rep overdue', text)
+                self.assertNotIn('Completed followup', text)
+                self.assertNotIn('Closed followup', text)
+
+    @patch('marketing.reports.timezone.localdate', return_value=date(2026, 9, 18))
+    def test_management_delays_pending_and_overdue_with_contact_dates(self, mocked_today):
+        from .reports import build_management_delays
+        self.deal('Pending future', date(2026, 9, 16), 10,
+                  next_followup_date=date(2026, 10, 5), followup_status='Pending')
+        self.deal('Overdue current', date(2026, 9, 16), 10,
+                  next_followup_date=date(2026, 9, 17), followup_status='Overdue')
+        self.deal('Completed excluded', self.start, 10,
+                  next_followup_date=self.start, followup_status='COMPLETED')
+        rows = build_management_delays(self.start, self.end, self.person.id)
+        pipeline = {row['customer']: row for row in rows if row.get('source') == 'customer_pipeline'}
+        self.assertEqual(pipeline['Pending future']['status'], 'Pending')
+        self.assertEqual(pipeline['Pending future']['last_contact_date'], date(2026, 9, 16))
+        self.assertEqual(pipeline['Pending future']['next_followup_date'], date(2026, 10, 5))
+        self.assertEqual(pipeline['Overdue current']['status'], 'Overdue')
+        self.assertNotIn('Completed excluded', pipeline)
+        _, content = self.download('excel')
+        sheet = load_workbook(BytesIO(content))['Management Delays']
+        self.assertEqual(sheet['H6'].value, 'Last Contact Date')
+        self.assertEqual(sheet['I6'].value, 'Next Follow-up Date')
+        row = next(row for row in sheet.iter_rows(min_row=7, values_only=True) if row[1] == 'Pending future')
+        self.assertEqual(row[7].date(), date(2026, 9, 16))
+        self.assertEqual(row[8].date(), date(2026, 10, 5))

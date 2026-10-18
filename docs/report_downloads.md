@@ -115,3 +115,7 @@ Each download selects one salesperson and filters all five sections, including
 KPI totals. Existing inactive salesperson IDs remain valid for historical reports.
 
 Library references: [openpyxl formatting](https://openpyxl.readthedocs.io/en/3.1/styles.html) and [ReportLab tables](https://docs.reportlab.com/reportlab/userguide/ch7_tables/).
+
+### Pending and overdue pipeline follow-ups in Management Delays
+
+Excel and PDF Management Delays include open customer pipeline records with Pending or Overdue follow-up status when either Last Contact Date or Next Follow-up Date falls within the selected inclusive period. Rows show both dates, customer, salesperson, next action and status. Past scheduled dates display Overdue; other pending dates display Pending. Completed follow-ups and won/lost deals are excluded. The salesperson filter applies to these rows and existing daily support issues.
