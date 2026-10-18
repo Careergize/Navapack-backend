@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .passwords import SalespersonPasswordAPIView
 from .reports import ReportAPIView, WeeklyReportAPIView, MonthlyReportAPIView
 from .report_exports import ExcelReportExportAPIView, PDFReportExportAPIView
 from .views import AuditLogAPIView
@@ -8,6 +9,8 @@ urlpatterns = [
     # Salespersons
     path('salespersons/', views.SalespersonListCreateAPIView.as_view(), name='salesperson-list-create'),
     path('salespersons/<int:pk>/', views.SalespersonDetailAPIView.as_view(), name='salesperson-detail'),
+
+    path('salespersons/<int:pk>/password/', SalespersonPasswordAPIView.as_view(), name='salesperson-password'),
 
     # Customer Pipeline
     path('pipeline/', views.CustomerPipelineListCreateAPIView.as_view(), name='pipeline-list-create'),
