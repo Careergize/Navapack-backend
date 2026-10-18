@@ -210,8 +210,8 @@ class ReportExportTests(TestCase):
             _, content = self.download(kind, {**self.params, 'salesperson': self.person.id})
             if kind == 'excel':
                 rows = list(load_workbook(BytesIO(content))['Management Delays'].iter_rows(min_row=7, values_only=True))
-                followups = [row for row in rows if row[6] == 'Overdue']
-                self.assertEqual(len(followups), 1)
+                followups = sorted([row for row in rows if row[6] == 'Overdue'], key=lambda row: row[1] != 'Inside customer')
+                self.assertEqual(len(followups), 2)
                 self.assertEqual(followups[0][1], 'Inside customer')
                 self.assertEqual(followups[0][2], self.person.name)
                 self.assertEqual(followups[0][3], 'Overdue follow-up: Call customer')
@@ -222,7 +222,7 @@ class ReportExportTests(TestCase):
                 self.assertIn('Overdue', text)
                 self.assertNotIn('Other rep overdue', text)
                 self.assertNotIn('Completed followup', text)
-                self.assertNotIn('Closed followup', text)
+                self.assertIn('Closed followup', text)
 
     @patch('marketing.reports.timezone.localdate', return_value=date(2026, 9, 18))
     def test_management_delays_pending_and_overdue_with_contact_dates(self, mocked_today):
@@ -247,3 +247,17 @@ class ReportExportTests(TestCase):
         row = next(row for row in sheet.iter_rows(min_row=7, values_only=True) if row[1] == 'Pending future')
         self.assertEqual(row[7].date(), date(2026, 9, 16))
         self.assertEqual(row[8].date(), date(2026, 10, 5))
+
+    @patch('marketing.reports.timezone.localdate', return_value=date(2026, 9, 18))
+    def test_active_followup_count_excludes_only_completed(self, mocked_today):
+        self.deal('Active no date', self.start, 10, followup_status='Waiting')
+        self.deal('Active due today', self.start, 10,
+                  next_followup_date=date(2026, 9, 18), followup_status='DUE TODAY')
+        self.deal('Inactive completed', self.start, 10, followup_status='completed')
+        report = build_report(self.start, self.end, salesperson_id=self.person.pk, period_only=True)
+        active = next(row for row in report['sales_performance']['rows'] if row['key'] == 'active_followups')
+        details = [row for row in report['management_delays'] if row.get('source') == 'customer_pipeline']
+        self.assertEqual(active['total_team'], len(details))
+        self.assertIn('Active no date', [row['customer'] for row in details])
+        self.assertIn('Active due today', [row['customer'] for row in details])
+        self.assertNotIn('Inactive completed', [row['customer'] for row in details])

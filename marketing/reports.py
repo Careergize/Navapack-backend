@@ -110,6 +110,7 @@ SECTION1_ROWS = [
     ('orders_count',      'Orders Confirmed (#)',         False),
     ('order_value',       'Order Value Won (UGX)',        True),
     ('cash_collected',    'Cash Collections (UGX)',       True),
+    ('active_followups',  'Active Follow-ups (Not Completed)', False),
     ('overdue',           'Active Overdue Follow-ups',    False),
 ]
 
@@ -144,6 +145,10 @@ def build_sales_performance(start, end, salesperson_id=None, period_only=False):
     # Query 2: everything that comes from CustomerPipeline (separate query so joins never multiply rows)
     won_in_range = Q(pipeline_deals__sales_stage__in=WON_STAGES,
                      pipeline_deals__stage_last_updated__range=(start, end))
+    active_followup_filter = ~Q(pipeline_deals__followup_status__iexact='COMPLETED')
+    if period_only:
+        active_followup_filter &= (Q(pipeline_deals__last_contact_date__range=(start, end))
+                                   | Q(pipeline_deals__next_followup_date__range=(start, end)))
     open_deal = ~Q(pipeline_deals__sales_stage__in=CLOSED_STAGES)
     overdue_filter = open_deal & ~Q(pipeline_deals__followup_status__iexact='COMPLETED') & Q(pipeline_deals__next_followup_date__lt=as_of)
     if period_only:
@@ -155,6 +160,7 @@ def build_sales_performance(start, end, salesperson_id=None, period_only=False):
                           & ~Q(pipeline_deals__sample_trial_status__in=SAMPLE_NOT_STARTED)),
             orders_count=Count('pipeline_deals', distinct=True, filter=won_in_range),
             order_value=Sum('pipeline_deals__actual_order_value_ugx', filter=won_in_range),
+            active_followups=Count('pipeline_deals', distinct=True, filter=active_followup_filter),
             overdue=Count('pipeline_deals', distinct=True,
                           filter=overdue_filter),
         )
@@ -176,6 +182,7 @@ def build_sales_performance(start, end, salesperson_id=None, period_only=False):
             'orders_count': b.orders_count,
             'order_value': _num(b.order_value),
             'cash_collected': _num(a.cash_collected),
+            'active_followups': b.active_followups,
             'overdue': b.overdue,
         }
 
@@ -281,19 +288,18 @@ def build_management_delays(start, end, salesperson_id=None):
             'status': a.issue_status,
             'is_past_deadline': bool(a.required_by_date and a.required_by_date < today and not resolved),
         })
-    # Include pending and overdue follow-ups contacted or scheduled in the period.
+    # Every follow-up except Completed is active, regardless of sales stage.
     followups = (CustomerPipeline.objects.select_related('salesperson')
                  .filter(Q(last_contact_date__range=(start, end))
                          | Q(next_followup_date__range=(start, end)))
-                 .filter(Q(followup_status__iexact='PENDING')
-                         | Q(followup_status__iexact='OVERDUE'))
-                 .exclude(sales_stage__in=CLOSED_STAGES)
                  .exclude(followup_status__iexact='COMPLETED'))
     if salesperson_id:
         followups = followups.filter(salesperson_id=salesperson_id)
     for deal in followups.order_by('next_followup_date', 'id'):
         overdue = bool(deal.next_followup_date and deal.next_followup_date < today)
-        followup_status = 'Overdue' if overdue else 'Pending'
+        followup_status = ('Overdue' if overdue else
+                           ('Due Today' if deal.next_followup_date == today else
+                            ((deal.followup_status or 'Pending').strip().title())))
         result.append({
             'id': f'pipeline-{deal.id}',
             'source': 'customer_pipeline',

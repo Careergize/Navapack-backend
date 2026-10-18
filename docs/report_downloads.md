@@ -118,4 +118,6 @@ Library references: [openpyxl formatting](https://openpyxl.readthedocs.io/en/3.1
 
 ### Pending and overdue pipeline follow-ups in Management Delays
 
-Excel and PDF Management Delays include open customer pipeline records with Pending or Overdue follow-up status when either Last Contact Date or Next Follow-up Date falls within the selected inclusive period. Rows show both dates, customer, salesperson, next action and status. Past scheduled dates display Overdue; other pending dates display Pending. Completed follow-ups and won/lost deals are excluded. The salesperson filter applies to these rows and existing daily support issues.
+Excel and PDF Management Delays include customer pipeline records with any follow-up status except Completed when either Last Contact Date or Next Follow-up Date falls within the selected inclusive period. Rows show both dates, customer, salesperson, next action and status. Past scheduled dates display Overdue; other pending dates display Pending. Completed follow-ups are excluded. Sales stage does not change whether a follow-up is active. The salesperson filter applies to these rows and existing daily support issues.
+
+Sales Performance includes Active Follow-ups (Not Completed), counting the same pipeline records as Management Delays for the selected period and salesperson. All statuses other than Completed count, including undated follow-ups with a Last Contact Date in the period.

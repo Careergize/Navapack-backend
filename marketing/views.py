@@ -332,6 +332,7 @@ class DashboardMetricsAPIView(APIView):
             },
             'pipeline_health': {
                 'active_opportunities': active_count,
+                'active_followups': CustomerPipeline.objects.exclude(followup_status__iexact='COMPLETED').count(),
                 'total_pipeline_value': total_pipeline_val,
                 'quotations_pending': quotations_pending,
             },
