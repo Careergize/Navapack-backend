@@ -145,7 +145,7 @@ def build_sales_performance(start, end, salesperson_id=None, period_only=False):
     won_in_range = Q(pipeline_deals__sales_stage__in=WON_STAGES,
                      pipeline_deals__stage_last_updated__range=(start, end))
     open_deal = ~Q(pipeline_deals__sales_stage__in=CLOSED_STAGES)
-    overdue_filter = open_deal & Q(pipeline_deals__next_followup_date__lt=as_of)
+    overdue_filter = open_deal & ~Q(pipeline_deals__followup_status__iexact='COMPLETED') & Q(pipeline_deals__next_followup_date__lt=as_of)
     if period_only:
         overdue_filter &= Q(pipeline_deals__next_followup_date__range=(start, end))
     pipeline_stats = {
@@ -226,7 +226,7 @@ def build_top_opportunities(start, end, limit=10, salesperson_id=None, touched_o
             'probability_pct': d.probability_pct,
             'next_action': d.next_action,
             'next_followup_date': d.next_followup_date,
-            'is_overdue': bool(d.next_followup_date and d.next_followup_date < today),
+            'is_overdue': bool(d.next_followup_date and d.next_followup_date < today and (d.followup_status or '').strip().upper() != 'COMPLETED'),
             'touched_in_period': (_in_range(d.last_contact_date, start, end)
                                   or _in_range(d.next_followup_date, start, end)
                                   or _in_range(d.stage_last_updated, start, end)),

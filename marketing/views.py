@@ -273,23 +273,23 @@ class DashboardMetricsAPIView(APIView):
     """Computes all front-page dashboard statistics and salesperson performance matrix."""
 
     def get(self, request):
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         # 1. Critical Actions
         overdue_followups = CustomerPipeline.objects.filter(
             next_followup_date__lt=today
-        ).exclude(sales_stage__in=['Won', 'Lost']).count()
+        ).exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost']).exclude(followup_status__iexact='COMPLETED').count()
 
         due_today = CustomerPipeline.objects.filter(
             next_followup_date=today
-        ).exclude(sales_stage__in=['Won', 'Lost']).count()
+        ).exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost']).exclude(followup_status__iexact='COMPLETED').count()
 
         no_date_set = CustomerPipeline.objects.filter(
             next_followup_date__isnull=True
-        ).exclude(sales_stage__in=['Won', 'Lost']).count()
+        ).exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost']).exclude(followup_status__iexact='COMPLETED').count()
 
         # 2. Pipeline Health
-        active_opps = CustomerPipeline.objects.exclude(sales_stage__in=['Won', 'Lost'])
+        active_opps = CustomerPipeline.objects.exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost'])
         active_count = active_opps.count()
         total_pipeline_val = active_opps.aggregate(Sum('estimated_value_ugx'))['estimated_value_ugx__sum'] or 0
         quotations_pending = active_opps.filter(sales_stage='Quotation Sent').count()
@@ -297,7 +297,7 @@ class DashboardMetricsAPIView(APIView):
         # 3. Monthly Performance
         start_of_month = today.replace(day=1)
         orders_won_mtd = CustomerPipeline.objects.filter(
-            sales_stage='Won', stage_last_updated__gte=start_of_month
+            sales_stage__in=['Won', 'Order Won'], stage_last_updated__gte=start_of_month
         )
         orders_won_count = orders_won_mtd.count()
         total_order_value = orders_won_mtd.aggregate(Sum('actual_order_value_ugx'))['actual_order_value_ugx__sum'] or 0
@@ -311,8 +311,8 @@ class DashboardMetricsAPIView(APIView):
 
         for sp in salespersons:
             sp_prospects = CustomerPipeline.objects.filter(salesperson=sp)
-            sp_active = sp_prospects.exclude(sales_stage__in=['Won', 'Lost'])
-            sp_won = sp_prospects.filter(sales_stage='Won')
+            sp_active = sp_prospects.exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost'])
+            sp_won = sp_prospects.filter(sales_stage__in=['Won', 'Order Won'])
 
             matrix.append({
                 'salesperson_id': sp.id,
@@ -321,7 +321,7 @@ class DashboardMetricsAPIView(APIView):
                 'active_pipeline_value': sp_active.aggregate(Sum('estimated_value_ugx'))['estimated_value_ugx__sum'] or 0,
                 'quotations_pending': sp_active.filter(sales_stage='Quotation Sent').count(),
                 'orders_won_value': sp_won.aggregate(Sum('actual_order_value_ugx'))['actual_order_value_ugx__sum'] or 0,
-                'overdue_followups': sp_active.filter(next_followup_date__lt=today).count(),
+                'overdue_followups': sp_active.filter(next_followup_date__lt=today).exclude(followup_status__iexact='COMPLETED').count(),
             })
 
         return Response({
@@ -356,7 +356,7 @@ class WeeklyReportAPIView(APIView):
         end_date_str = request.GET.get('end_date')
 
         if not start_date_str or not end_date_str:
-            today = timezone.now().date()
+            today = timezone.localdate()
             start_date = today - timedelta(days=today.weekday())  # Monday
             end_date = start_date + timedelta(days=5)  # Saturday
         else:
@@ -397,7 +397,7 @@ class WeeklyReportAPIView(APIView):
             'salespersons': [sp.name for sp in salespersons],
             'kpi_matrix': kpi_matrix,
             'top_opportunities': CustomerPipelineSerializer(
-                CustomerPipeline.objects.exclude(sales_stage__in=['Won', 'Lost']).order_by('-estimated_value_ugx')[:10],
+                CustomerPipeline.objects.exclude(sales_stage__in=['Won', 'Lost', 'Order Won', 'Order Lost']).order_by('-estimated_value_ugx')[:10],
                 many=True
             ).data,
             'market_intelligence': DailyActivitySerializer(
