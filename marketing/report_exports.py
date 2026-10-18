@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .reports import build_report
+from .models import Salesperson
 
 
 class ISODateField(serializers.DateField):
@@ -26,11 +27,26 @@ class ReportExportParameters(serializers.Serializer):
     from_date = ISODateField(input_formats=['%Y-%m-%d'])
     to_date = ISODateField(input_formats=['%Y-%m-%d'])
     salesperson = serializers.IntegerField(required=False, min_value=1)
+    salesperson_id = serializers.IntegerField(required=False, min_value=1)
+    user_id = serializers.IntegerField(required=False, min_value=1)
     limit = serializers.IntegerField(required=False, default=10, min_value=1, max_value=100)
 
     def validate(self, data):
         if data['from_date'] > data['to_date']:
             raise serializers.ValidationError({'error': 'From date cannot be greater than To date.'})
+        selected = []
+        for field in ('salesperson', 'salesperson_id', 'user_id'):
+            if field not in data:
+                continue
+            lookup = 'user_id' if field == 'user_id' else 'pk'
+            person = Salesperson.objects.filter(**{lookup: data[field]}).first()
+            if person is None:
+                raise serializers.ValidationError({field: 'No salesperson found for this selection.'})
+            selected.append(person.pk)
+        if len(set(selected)) > 1:
+            raise serializers.ValidationError({'error': 'Select only one salesperson per report.'})
+        if selected:
+            data['salesperson'] = selected[0]
         return data
 
 

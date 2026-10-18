@@ -68,8 +68,11 @@ The download tests verify required/invalid/reversed dates, inclusive boundaries,
 ## Frontend download example
 
 ```javascript
-async function downloadReport(format, fromDate, toDate, token) {
+async function downloadReport(format, fromDate, toDate, token, salespersonId = null) {
   const params = new URLSearchParams({from_date: fromDate, to_date: toDate});
+  if (salespersonId !== null && salespersonId !== '') {
+    params.set('salesperson', salespersonId);
+  }
   const response = await fetch(`/api/reports/export/${format}/?${params}`, {
     headers: {Authorization: `Token ${token}`},
   });
@@ -90,5 +93,25 @@ async function downloadReport(format, fromDate, toDate, token) {
 ```
 
 Use your existing backend base URL when the frontend is hosted on a different origin. Pass `excel` or `pdf`. The browser receives a file blob; no frontend report calculation is needed.
+
+### Individual salesperson selector
+
+Populate the download dialog's selector using authenticated `GET /api/salespersons/`.
+Use each object's `id` as the option value and `name` as its label. Include an
+"All salespeople" option with an empty value. Pass the selected value as the last
+argument to `downloadReport` above. For example:
+
+```javascript
+downloadReport('excel', fromDate, toDate, token, selectedSalespersonId);
+downloadReport('pdf', fromDate, toDate, token, selectedSalespersonId);
+```
+
+`salesperson_id=<id>` is also accepted. If an existing user selector supplies
+authentication account IDs, send `user_id=<id>` instead; the backend resolves the
+linked salesperson. Account IDs must not be sent as salesperson IDs. Unknown
+selections, accounts without a linked salesperson and conflicting selections
+return HTTP 400. Omit all selection parameters to download the team report.
+Each download selects one salesperson and filters all five sections, including
+KPI totals. Existing inactive salesperson IDs remain valid for historical reports.
 
 Library references: [openpyxl formatting](https://openpyxl.readthedocs.io/en/3.1/styles.html) and [ReportLab tables](https://docs.reportlab.com/reportlab/userguide/ch7_tables/).

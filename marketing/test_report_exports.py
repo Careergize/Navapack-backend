@@ -130,6 +130,40 @@ class ReportExportTests(TestCase):
             builder.assert_called_once_with(self.start, self.end, salesperson_id=None, limit=10,
                 touched_only=True, period_only=True)
 
+    def test_individual_selection_aliases_filter_every_section_in_both_formats(self):
+        for field, value in (('salesperson', self.other.pk),
+                             ('salesperson_id', self.other.pk)):
+            for kind in ('excel', 'pdf'):
+                with self.subTest(field=field, kind=kind):
+                    _, content = self.download(kind, dict(self.params, **{field: value}))
+                    if kind == 'excel':
+                        workbook = load_workbook(BytesIO(content))
+                        text = str([list(sheet.values) for sheet in workbook])
+                    else:
+                        text = '\n'.join(page.extract_text() for page in PdfReader(BytesIO(content)).pages)
+                    self.assertIn('Other', text)
+                    for excluded in ('Alex', 'Inside customer', 'Lost inside', 'Boundary start'):
+                        self.assertNotIn(excluded, text)
+
+    def test_account_user_id_resolves_to_salesperson(self):
+        # Account IDs and salesperson IDs are separate namespaces.
+        account = get_user_model().objects.create_user(username='selected-account')
+        Salesperson.objects.filter(pk=self.person.pk).update(user=account)
+        _, content = self.download('excel', dict(self.params, user_id=account.pk))
+        workbook = load_workbook(BytesIO(content))
+        self.assertEqual(workbook['Sales Performance']['B6'].value, 'Alex')
+        self.assertEqual(workbook['Sales Performance']['C6'].value, 'TOTAL TEAM')
+        self.assertEqual(workbook['Top Opportunities']['A7'].value, 'Inside customer')
+
+    def test_unknown_and_conflicting_selections_are_rejected(self):
+        for extra in ({'salesperson': 999999}, {'salesperson_id': 999999},
+                      {'user_id': 999999}, {'user_id': 'abc'},
+                      {'salesperson': self.person.pk, 'salesperson_id': self.other.pk}):
+            for kind in ('excel', 'pdf'):
+                response = self.client.get(reverse('reports-export-' + kind), dict(self.params, **extra))
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('error', response.data)
+
     def test_existing_json_defaults_still_include_pipeline_snapshot(self):
         response = self.client.get(reverse('reports'), {'start_date': self.start.isoformat(), 'end_date': self.end.isoformat()})
         self.assertEqual(response.status_code, 200)
