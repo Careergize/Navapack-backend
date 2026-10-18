@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Salesperson
-from .permissions import is_management
 
 
 class MarketingPasswordPermission(BasePermission):
@@ -38,9 +37,10 @@ class SalespersonPasswordAPIView(APIView):
         if account is None:
             return Response({'error': 'This salesperson has no linked login account.'}, status=400)
         profile = getattr(account, 'profile', None)
-        department = (profile.department if profile else person.department).strip().lower()
-        if is_management(account) or 'sales' not in department or 'marketing' in department:
-            return Response({'error': 'Only salesperson login passwords can be updated here.'}, status=403)
+        department = (profile.department if profile else '').strip().lower()
+        # Password delegation is based on the login department, not admin flags.
+        if department != 'sales':
+            return Response({'error': f'The selected salesperson is linked to an account in the "{department or "Unassigned"}" department. Select a Sales login account. Your Marketing login is authorized; this restriction applies to the selected account.'}, status=403)
         serializer = PasswordInput(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
