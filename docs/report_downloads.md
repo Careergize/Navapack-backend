@@ -25,7 +25,7 @@ Successful responses return binary files, not JSON:
 
 `marketing/reports.py:build_report` is shared by the existing JSON endpoint and both exports. No models, migrations or new reporting calculations are introduced beyond applying the requested period to the existing overdue query. Existing JSON report defaults are preserved.
 
-The reference workbook has five sections, matching the Reports API. Excel starts with an Overall Report sheet combining all five sections, followed by five corresponding individual sheets, with the reference's peach title, blue headers, per-salesperson KPI matrix, and matching detail columns:
+The reference workbook has five sections, matching the Reports API. Excel starts with an Overall Report sheet listing every original Daily Activity and Customer Pipeline entry, with all stored fields in one chronological table, filtered by salesperson and activity date / pipeline date added, followed by five corresponding individual sheets, with the reference's peach title, blue headers, per-salesperson KPI matrix, and matching detail columns:
 
 1. Sales Performance
 2. Top Opportunities

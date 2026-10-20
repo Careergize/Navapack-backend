@@ -1,7 +1,6 @@
 """Download renderers for the existing five-section CRM report."""
 import math
 import re
-from copy import copy
 from datetime import date
 from io import BytesIO
 from pathlib import Path
@@ -14,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .reports import build_report
-from .models import Salesperson
+from .models import Salesperson, CustomerPipeline, DailyActivity
 
 
 class ISODateField(serializers.DateField):
@@ -78,6 +77,36 @@ SECTIONS = [
 ]
 
 
+def overall_entries(start, end, salesperson_id=None):
+    """Original entries in date order, without executive report classifications."""
+    columns = [('entry_date', 'Entry Date', 'date', 16),
+               ('salesperson', 'Salesperson', 'text', 24)]
+    fields = {}
+    for model in (DailyActivity, CustomerPipeline):
+        for field in model._meta.concrete_fields:
+            if field.name not in ('date', 'date_added', 'salesperson'):
+                fields.setdefault(field.name, field)
+    for name, field in fields.items():
+        kind = ('date' if field.get_internal_type() == 'DateField' else
+                'money' if name.endswith('_ugx') else
+                'number' if field.get_internal_type() in ('DecimalField', 'IntegerField', 'BigAutoField', 'AutoField') else 'text')
+        columns.append((name, str(field.verbose_name).replace('_', ' ').title(), kind, 24))
+    rows = []
+    for model, date_field in ((DailyActivity, 'date'), (CustomerPipeline, 'date_added')):
+        entries = model.objects.select_related('salesperson').filter(
+            **{f'{date_field}__range': (start, end)})
+        if salesperson_id:
+            entries = entries.filter(salesperson_id=salesperson_id)
+        for entry in entries:
+            row = {'entry_date': getattr(entry, date_field), 'salesperson': entry.salesperson.name}
+            for field in model._meta.concrete_fields:
+                if field.name in fields:
+                    row[field.name] = getattr(entry, field.attname)
+            rows.append(row)
+    rows.sort(key=lambda row: (row['entry_date'], row.get('id', 0)))
+    return ('Overall Report', 'ALL ENTRIES', columns, rows)
+
+
 def report_tables(report):
     performance = report['sales_performance']
     people = performance['salespersons']
@@ -88,7 +117,7 @@ def report_tables(report):
              '_currency': item['is_currency'], **{
                  f'person_{i}': item['per_salesperson'][name] for i, name in enumerate(people)}}
             for item in performance['rows']]
-    return [('Sales Performance', 'SALES PERFORMANCE', columns, rows)] + [
+    return ([report['overall_entries']] if 'overall_entries' in report else []) + [('Sales Performance', 'SALES PERFORMANCE', columns, rows)] + [
         (sheet, title, columns, report[key]) for key, sheet, title, columns in SECTIONS]
 
 
@@ -185,41 +214,6 @@ def excel_report(report):
         sheet.page_setup.fitToHeight = 0
         sheet.sheet_properties.pageSetUpPr.fitToPage = True
         sheet.sheet_view.showGridLines = False
-    # Keep the individual sheets and collect their complete tables in one overview.
-    overall = workbook.create_sheet('Overall Report', 0)
-    sources = list(workbook.worksheets)[1:]
-    count = max(sheet.max_column for sheet in sources)
-    for row in range(1, 4):
-        for source in sources[0][row]:
-            target = overall.cell(row, source.column, source.value)
-            target._style = copy(source._style)
-    overall['A1'] = 'NAVAPACK CRM OVERALL REPORT'
-    overall.merge_cells(start_row=1, start_column=1, end_row=1, end_column=count)
-    overall.row_dimensions[1].height = 32
-    next_row = 5
-    for source in sources:
-        overall.merge_cells(start_row=next_row, start_column=1,
-                            end_row=next_row, end_column=source.max_column)
-        for row in source.iter_rows(min_row=5):
-            destination = next_row + row[0].row - 5
-            overall.row_dimensions[destination].height = source.row_dimensions[row[0].row].height
-            for cell in row:
-                target = overall.cell(destination, cell.column, cell.value)
-                target._style = copy(cell._style)
-                if cell.data_type == 's':
-                    target.data_type = 's'
-        for letter, dimension in source.column_dimensions.items():
-            overall.column_dimensions[letter].width = max(
-                overall.column_dimensions[letter].width or 0, dimension.width or 0)
-        next_row += source.max_row - 4 + 2
-    overall.freeze_panes = 'B7'
-    overall.sheet_view.showGridLines = False
-    overall.print_title_rows = '1:3'
-    overall.page_setup.orientation = 'landscape'
-    overall.page_setup.paperSize = overall.PAPERSIZE_A3
-    overall.page_setup.fitToWidth = 1
-    overall.page_setup.fitToHeight = 0
-    overall.sheet_properties.pageSetUpPr.fitToPage = True
     output = BytesIO()
     workbook.save(output)
     output.seek(0)
@@ -336,6 +330,7 @@ class ReportExportAPIView(APIView):
             salesperson_id=data.get('salesperson'), limit=None,
             touched_only=True, period_only=True)
         if self.export_format == 'xlsx':
+            report['overall_entries'] = overall_entries(data['from_date'], data['to_date'], data.get('salesperson'))
             output = excel_report(report)
             content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         else:

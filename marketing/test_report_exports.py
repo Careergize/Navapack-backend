@@ -97,20 +97,37 @@ class ReportExportTests(TestCase):
         self.assertEqual(metrics['Order Value Won (UGX)'], 25000)
         self.assertEqual(metrics['Active Overdue Follow-ups'], 1)
 
-    def test_overall_sheet_contains_every_section_and_all_opportunities(self):
+    def test_overall_sheet_lists_all_original_entries_without_classification(self):
         for index in range(12):
             self.deal(f'Additional {index}', date(2026, 9, 15), 100 + index)
-        _, content = self.download('excel')
+        DailyActivity.objects.create(date=self.start, salesperson=self.person,
+            customer_company='Plain activity', discussion_outcome='=Literal notes',
+            telephone='0123456789', cash_collected_ugx=123)
+        DailyActivity.objects.create(date=self.start, salesperson=self.other,
+            customer_company='Other salesperson')
+        _, content = self.download('excel', dict(self.params, salesperson=self.person.pk))
         workbook = load_workbook(BytesIO(content))
-        overall = workbook['Overall Report']
-        values = [row[0] for row in overall.iter_rows(values_only=True)]
-        self.assertEqual(workbook['Top Opportunities'].max_row - 6, 13)
-        for source in list(workbook.worksheets)[1:]:
-            self.assertIn(source['A5'].value, values)
-            for row in source.iter_rows(min_row=7, values_only=True):
-                self.assertIn(row[0], values)
-        self.assertNotIn('Outside customer', values)
-        self.assertNotIn('Lost outside', values)
+        sheet = workbook['Overall Report']
+        headers = [cell.value for cell in sheet[6]]
+        rows = [dict(zip(headers, row)) for row in sheet.iter_rows(min_row=7, values_only=True)]
+        self.assertEqual(len(rows), 18)  # 15 pipeline entries and 3 daily activities
+        customers = [row['Customer Company'] for row in rows]
+        for expected in ('Inside customer', 'Lost inside', 'Won inside', 'Plain activity',
+                         'Boundary start', 'Boundary end', 'Additional 11'):
+            self.assertIn(expected, customers)
+        for excluded in ('Outside customer', 'Lost outside', 'Other salesperson',
+                         'Excluded before', 'Excluded after'):
+            self.assertNotIn(excluded, customers)
+        plain = next(row for row in rows if row['Customer Company'] == 'Plain activity')
+        self.assertEqual(plain['Discussion Outcome'], '=Literal notes')
+        self.assertEqual(plain['Telephone'], '0123456789')
+        self.assertEqual(plain['Cash Collected Ugx'], 123)
+        self.assertTrue(all(row['Salesperson'] == 'Alex' for row in rows))
+        dates = [row['Entry Date'] for row in rows]
+        self.assertEqual(dates, sorted(dates))
+        self.assertTrue(sheet.auto_filter.ref)
+        for row in sheet.iter_rows(min_row=7):
+            self.assertTrue(all(cell.data_type != 'f' for cell in row))
 
     def test_pdf_real_file_and_all_sections(self):
         response, content = self.download('pdf')
