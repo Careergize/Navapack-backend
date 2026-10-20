@@ -75,7 +75,7 @@ class ReportExportTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         self.assertIn('Navapack_Report_2026-09-01_to_2026-09-30.xlsx', response['Content-Disposition'])
         workbook = load_workbook(BytesIO(content))
-        self.assertEqual(workbook.sheetnames, ['Sales Performance', 'Top Opportunities',
+        self.assertEqual(workbook.sheetnames, ['Overall Report', 'Sales Performance', 'Top Opportunities',
             'Market Intelligence', 'Management Delays', 'Orders Lost'])
         self.assertEqual(workbook['Top Opportunities']['A7'].value, 'Inside customer')
         self.assertEqual(workbook['Top Opportunities'].max_row, 7)
@@ -87,7 +87,8 @@ class ReportExportTests(TestCase):
         self.assertEqual(workbook['Orders Lost']['A7'].value, 'Lost inside')
         for sheet in workbook:
             self.assertTrue(sheet.freeze_panes)
-            self.assertTrue(sheet.auto_filter.ref)
+            if sheet.title != 'Overall Report':
+                self.assertTrue(sheet.auto_filter.ref)
             self.assertEqual(sheet['B2'].value.date(), self.start)
         metrics = {row[0]: row[-1] for row in workbook['Sales Performance'].iter_rows(min_row=7, values_only=True)}
         self.assertEqual(metrics['Physical Visits'], 2)
@@ -95,6 +96,21 @@ class ReportExportTests(TestCase):
         self.assertEqual(metrics['Cash Collections (UGX)'], 1000)
         self.assertEqual(metrics['Order Value Won (UGX)'], 25000)
         self.assertEqual(metrics['Active Overdue Follow-ups'], 1)
+
+    def test_overall_sheet_contains_every_section_and_all_opportunities(self):
+        for index in range(12):
+            self.deal(f'Additional {index}', date(2026, 9, 15), 100 + index)
+        _, content = self.download('excel')
+        workbook = load_workbook(BytesIO(content))
+        overall = workbook['Overall Report']
+        values = [row[0] for row in overall.iter_rows(values_only=True)]
+        self.assertEqual(workbook['Top Opportunities'].max_row - 6, 13)
+        for source in list(workbook.worksheets)[1:]:
+            self.assertIn(source['A5'].value, values)
+            for row in source.iter_rows(min_row=7, values_only=True):
+                self.assertIn(row[0], values)
+        self.assertNotIn('Outside customer', values)
+        self.assertNotIn('Lost outside', values)
 
     def test_pdf_real_file_and_all_sections(self):
         response, content = self.download('pdf')
@@ -127,7 +143,7 @@ class ReportExportTests(TestCase):
     def test_exports_reuse_existing_report_builders(self):
         with patch('marketing.report_exports.build_report', wraps=build_report) as builder:
             self.download('excel')
-            builder.assert_called_once_with(self.start, self.end, salesperson_id=None, limit=10,
+            builder.assert_called_once_with(self.start, self.end, salesperson_id=None, limit=None,
                 touched_only=True, period_only=True)
 
     def test_individual_selection_aliases_filter_every_section_in_both_formats(self):

@@ -7,7 +7,7 @@ These authenticated GET endpoints download the existing five-section report:
 /api/reports/export/pdf/?from_date=2026-09-01&to_date=2026-09-30
 ```
 
-Send your existing `Authorization: Token <token>` header or use an authenticated Django session. Exports use the application's existing authenticated team-wide read access. Optional `salesperson=<id>` filters all five sections. Optional `limit=10` selects the number of top opportunities (1-100, default 10, consistent with the existing Reports API). It does not limit the other report sections.
+Send your existing `Authorization: Token <token>` header or use an authenticated Django session. Exports use the application's existing authenticated team-wide read access. Optional `salesperson=<id>` filters all five sections. Exports include all matching opportunities. The legacy `limit` parameter is still validated for compatibility but does not truncate downloads.
 
 Both dates are required in exact `YYYY-MM-DD` format. Invalid calendar dates, missing dates, reversed ranges and invalid optional numeric filters return HTTP 400 with an `error` property. Both range boundaries are included.
 
@@ -25,7 +25,7 @@ Successful responses return binary files, not JSON:
 
 `marketing/reports.py:build_report` is shared by the existing JSON endpoint and both exports. No models, migrations or new reporting calculations are introduced beyond applying the requested period to the existing overdue query. Existing JSON report defaults are preserved.
 
-The reference workbook has five sections, matching the Reports API. Excel uses five corresponding sheets, with the reference's peach title, blue headers, per-salesperson KPI matrix, and matching detail columns:
+The reference workbook has five sections, matching the Reports API. Excel starts with an Overall Report sheet combining all five sections, followed by five corresponding individual sheets, with the reference's peach title, blue headers, per-salesperson KPI matrix, and matching detail columns:
 
 1. Sales Performance
 2. Top Opportunities

@@ -1,6 +1,7 @@
 """Download renderers for the existing five-section CRM report."""
 import math
 import re
+from copy import copy
 from datetime import date
 from io import BytesIO
 from pathlib import Path
@@ -184,6 +185,41 @@ def excel_report(report):
         sheet.page_setup.fitToHeight = 0
         sheet.sheet_properties.pageSetUpPr.fitToPage = True
         sheet.sheet_view.showGridLines = False
+    # Keep the individual sheets and collect their complete tables in one overview.
+    overall = workbook.create_sheet('Overall Report', 0)
+    sources = list(workbook.worksheets)[1:]
+    count = max(sheet.max_column for sheet in sources)
+    for row in range(1, 4):
+        for source in sources[0][row]:
+            target = overall.cell(row, source.column, source.value)
+            target._style = copy(source._style)
+    overall['A1'] = 'NAVAPACK CRM OVERALL REPORT'
+    overall.merge_cells(start_row=1, start_column=1, end_row=1, end_column=count)
+    overall.row_dimensions[1].height = 32
+    next_row = 5
+    for source in sources:
+        overall.merge_cells(start_row=next_row, start_column=1,
+                            end_row=next_row, end_column=source.max_column)
+        for row in source.iter_rows(min_row=5):
+            destination = next_row + row[0].row - 5
+            overall.row_dimensions[destination].height = source.row_dimensions[row[0].row].height
+            for cell in row:
+                target = overall.cell(destination, cell.column, cell.value)
+                target._style = copy(cell._style)
+                if cell.data_type == 's':
+                    target.data_type = 's'
+        for letter, dimension in source.column_dimensions.items():
+            overall.column_dimensions[letter].width = max(
+                overall.column_dimensions[letter].width or 0, dimension.width or 0)
+        next_row += source.max_row - 4 + 2
+    overall.freeze_panes = 'B7'
+    overall.sheet_view.showGridLines = False
+    overall.print_title_rows = '1:3'
+    overall.page_setup.orientation = 'landscape'
+    overall.page_setup.paperSize = overall.PAPERSIZE_A3
+    overall.page_setup.fitToWidth = 1
+    overall.page_setup.fitToHeight = 0
+    overall.sheet_properties.pageSetUpPr.fitToPage = True
     output = BytesIO()
     workbook.save(output)
     output.seek(0)
@@ -297,7 +333,7 @@ class ReportExportAPIView(APIView):
             return Response({'error': message}, status=400)
         data = params.validated_data
         report = build_report(data['from_date'], data['to_date'],
-            salesperson_id=data.get('salesperson'), limit=data['limit'],
+            salesperson_id=data.get('salesperson'), limit=None,
             touched_only=True, period_only=True)
         if self.export_format == 'xlsx':
             output = excel_report(report)
