@@ -236,17 +236,23 @@ class ReportExportTests(TestCase):
         rows = build_management_delays(self.start, self.end, self.person.id)
         pipeline = {row['customer']: row for row in rows if row.get('source') == 'customer_pipeline'}
         self.assertEqual(pipeline['Pending future']['status'], 'Pending')
+        self.assertEqual(pipeline['Pending future']['date'], date(2026, 9, 16))
         self.assertEqual(pipeline['Pending future']['last_contact_date'], date(2026, 9, 16))
         self.assertEqual(pipeline['Pending future']['next_followup_date'], date(2026, 10, 5))
         self.assertEqual(pipeline['Overdue current']['status'], 'Overdue')
         self.assertNotIn('Completed excluded', pipeline)
         _, content = self.download('excel')
         sheet = load_workbook(BytesIO(content))['Management Delays']
+        self.assertEqual(sheet['A6'].value, 'Date Added')
         self.assertEqual(sheet['H6'].value, 'Last Contact Date')
         self.assertEqual(sheet['I6'].value, 'Next Follow-up Date')
         row = next(row for row in sheet.iter_rows(min_row=7, values_only=True) if row[1] == 'Pending future')
+        self.assertEqual(row[0].date(), date(2026, 9, 16))
         self.assertEqual(row[7].date(), date(2026, 9, 16))
         self.assertEqual(row[8].date(), date(2026, 10, 5))
+        _, content = self.download('pdf')
+        text = '\n'.join(page.extract_text() for page in PdfReader(BytesIO(content)).pages)
+        self.assertIn('Date Added', text)
 
     @patch('marketing.reports.timezone.localdate', return_value=date(2026, 9, 18))
     def test_active_followup_count_excludes_only_completed(self, mocked_today):

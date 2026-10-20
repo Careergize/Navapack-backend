@@ -304,7 +304,7 @@ def build_management_delays(start, end, salesperson_id=None):
             'id': f'pipeline-{deal.id}',
             'source': 'customer_pipeline',
             'prospect_id': deal.prospect_id,
-            'date': deal.next_followup_date,
+            'date': deal.date_added,
             'customer': deal.customer_company,
             'salesperson': deal.salesperson.name,
             'support_required': followup_status + ' follow-up: ' + (deal.next_action or 'Contact customer'),

@@ -63,7 +63,7 @@ SECTIONS = [
         ('intelligence', 'Market / Competitor Information', 'text', 29),
         ('recommended_action', 'Recommended Action', 'text', 23)]),
     ('management_delays', 'Management Delays', 'MANAGEMENT / PRODUCTION / SAMPLE DELAYS TO RESOLVE', [
-        ('date', 'Date', 'date', 10), ('customer', 'Customer / Company', 'text', 13),
+        ('date', 'Date Added', 'date', 10), ('customer', 'Customer / Company', 'text', 13),
         ('salesperson', 'Salesperson', 'text', 12), ('support_required', 'Support / Issue Required', 'text', 23),
         ('responsible', 'Responsible Person / Dept.', 'text', 15),
         ('required_by_date', 'Required By / Deadline', 'date', 12), ('status', 'Status', 'text', 15),
